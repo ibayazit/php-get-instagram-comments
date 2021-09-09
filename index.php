@@ -1,24 +1,34 @@
 <?php
+
 require __DIR__ . '/vendor/autoload.php';
+
 use Phpfastcache\Helper\Psr16Adapter;
 use InstagramScraper\Instagram;
 
-$instagram_post_code = "CB96aFmAEqf";
-$instagram_comment_row_count = 10;
+$username = 'USERNAME';
+$password = 'PASSWORD';
 
-$instagram = new \InstagramScraper\Instagram();
-$comments = $instagram->getMediaCommentsByCode($instagram_post_code, $instagram_comment_row_count);
-$listArr = [];
-foreach($comments as $k=>$c):
-    $owner = $c->getOwner();
-    $x = [
-        "Id" => $c->getId(),
-        "Text" => $c->getText(),
+$post_code = "POSTCODE";
+$comment_count = 10;
+
+$instagram = Instagram::withCredentials($username, $password, new Psr16Adapter('Files'));
+$instagram->login();
+$instagram->saveSession();
+$comments = $instagram->getMediaCommentsByCode($post_code, $comment_count);
+
+$data = [];
+
+foreach($comments as $comment){
+    $owner = $comment->getOwner();
+    $data[] = [
+        "Id" => $comment->getId(),
+        "Text" => $comment->getText(),
         "Owner" => [
             "Username" => $owner->getUsername(),
             "ProfilPicture" => $owner->getProfilePicUrl()
         ]
     ];
-    $listArr[] = $x;
-endforeach;
-echo json_encode($listArr);
+}
+
+header('Content-Type: application/json; charset=utf-8');
+echo json_encode($data);
